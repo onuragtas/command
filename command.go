@@ -41,6 +41,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	}
 
 	c := make(chan bool)
+	cError := make(chan bool)
 
 	go func() {
 		for {
@@ -63,13 +64,34 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		}
 	}()
 
+	go func() {
+		for {
+			select {
+			case <-cError:
+				break
+			default:
+				// Çıktıları yakalayın ve bir işleve gönderin
+				output := berr.Bytes()
+				if t.StdErrWriter != nil && len(output) > 0 {
+					t.StdErrWriter(output)
+					if t.OutputAndQuit {
+						break
+					}
+				}
+				if t.Sleep > 0 {
+					time.Sleep(t.Sleep * time.Millisecond)
+				}
+			}
+		}
+	}()
+
 	if err := cmd.Start(); err != nil {
-		log.Println(err)
 		c <- true
+		cError <- true
 	}
 
 	if err := cmd.Wait(); err != nil {
 		c <- true
-		log.Println(err)
+		cError <- true
 	}
 }
