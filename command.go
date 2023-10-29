@@ -83,7 +83,6 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 					if t.OutputAndQuit {
 						break
 					}
-					cmd.Cancel()
 				}
 				if t.Sleep > 0 {
 					time.Sleep(t.Sleep * time.Millisecond)
