@@ -53,7 +53,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 			default:
 				// Çıktıları yakalayın ve bir işleve gönderin
 				output := bout.Bytes()
-				if t.StdOutWriter != nil {
+				if t.StdOutWriter != nil && len(output) > 0 {
 					t.StdOutWriter(output)
 				}
 				if t.Sleep > 0 {
