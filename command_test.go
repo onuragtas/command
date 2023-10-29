@@ -16,9 +16,10 @@ func Test(t *testing.T) {
 
 	// Command yapısını oluşturun
 	cmd := Command{
-		StdOutWriter: writeToStdout,
-		StdErrWriter: writeToStderr,
-		StdInData:    "Bu komuta giriş verisi gönderilecek.",
+		StdOutWriter:  writeToStdout,
+		StdErrWriter:  writeToStderr,
+		Sleep:         1000,
+		OutputAndQuit: true,
 	}
 
 	cmd.RunCommand("./", "ps", "aux")
