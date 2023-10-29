@@ -13,9 +13,9 @@ type Command struct {
 	stdInFunction func()
 	stdInDuration int
 
-	stdOutWriter func([]byte)
-	stdErrWriter func([]byte)
-	stdInData    string
+	StdOutWriter func([]byte)
+	StdErrWriter func([]byte)
+	StdInData    string
 }
 
 func (t *Command) RunCommand(path string, name string, arg ...string) {
@@ -30,7 +30,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	cmd.Stderr = &berr
 
 	// Komutun stdin'e yazılması
-	if t.stdInData != "" {
+	if t.StdInData != "" {
 		in, err := cmd.StdinPipe()
 		if err != nil {
 			log.Fatal(err)
@@ -38,7 +38,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 
 		go func() {
 			defer in.Close()
-			in.Write([]byte(t.stdInData))
+			in.Write([]byte(t.StdInData))
 		}()
 	}
 
@@ -50,8 +50,8 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		for {
 			// Çıktıları yakalayın ve bir işleve gönderin
 			output := bout.Bytes()
-			if t.stdOutWriter != nil {
-				t.stdOutWriter(output)
+			if t.StdOutWriter != nil {
+				t.StdOutWriter(output)
 			}
 
 			// Çıktıları sıfırlamayın, bu şekilde sürekli olarak çıktıları izleyebilirsiniz
