@@ -49,9 +49,11 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	}
 
 	go func() {
-		for {
+		loop := true
+		for loop {
 			select {
 			case <-c:
+				loop = false
 				break
 			default:
 				// Çıktıları yakalayın ve bir işleve gönderin
@@ -59,8 +61,8 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 				if t.StdOutWriter != nil && len(output) > 0 {
 					t.StdOutWriter(output)
 					if t.OutputAndQuit {
+						loop = false
 						break
-						cmd.Cancel()
 					}
 				}
 				if t.Sleep > 0 {
@@ -71,9 +73,11 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	}()
 
 	go func() {
-		for {
+		loop := true
+		for loop {
 			select {
 			case <-cError:
+				loop = false
 				break
 			default:
 				// Çıktıları yakalayın ve bir işleve gönderin
@@ -81,6 +85,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 				if t.StdErrWriter != nil && len(output) > 0 {
 					t.StdErrWriter(output)
 					if t.OutputAndQuit {
+						loop = false
 						break
 					}
 				}
