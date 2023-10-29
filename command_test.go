@@ -21,5 +21,6 @@ func Test(t *testing.T) {
 		StdInData:    "Bu komuta giriş verisi gönderilecek.",
 	}
 
-	cmd.RunCommand("./", "watch", "-n", "2", "ls -la")
+	cmd.RunCommand("./", "ls", "-la")
+	//cmd.RunCommand("./", "watch", "-n", "2", "ls -la")
 }
