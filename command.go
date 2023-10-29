@@ -43,6 +43,11 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	c := make(chan bool)
 	cError := make(chan bool)
 
+	if err := cmd.Start(); err != nil {
+		c <- true
+		cError <- true
+	}
+
 	go func() {
 		for {
 			select {
@@ -86,11 +91,6 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 			}
 		}
 	}()
-
-	if err := cmd.Start(); err != nil {
-		c <- true
-		cError <- true
-	}
 
 	if err := cmd.Wait(); err != nil {
 		c <- true
