@@ -64,7 +64,8 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	}()
 
 	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		c <- true
 	}
 
 	if err := cmd.Wait(); err != nil {
