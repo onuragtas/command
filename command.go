@@ -16,6 +16,7 @@ type Command struct {
 	StdOutWriter func([]byte)
 	StdErrWriter func([]byte)
 	StdInData    string
+	Sleep        time.Duration
 }
 
 func (t *Command) RunCommand(path string, name string, arg ...string) {
@@ -53,11 +54,9 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 			if t.StdOutWriter != nil {
 				t.StdOutWriter(output)
 			}
-
-			// Çıktıları sıfırlamayın, bu şekilde sürekli olarak çıktıları izleyebilirsiniz
-
-			// Belirli bir aralıkta veya her çıktı sonrasında bir süre bekleme ekleyebilirsiniz
-			// time.Sleep(1 * time.Second)
+			if t.Sleep > 0 {
+				time.Sleep(t.Sleep * time.Millisecond)
+			}
 		}
 	}()
 
