@@ -3,7 +3,6 @@ package command
 import (
 	"bytes"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -13,48 +12,60 @@ import (
 type Command struct {
 	stdInFunction func()
 	stdInDuration int
+
+	stdOutWriter func([]byte)
+	stdErrWriter func([]byte)
+	stdInData    string
 }
 
 func (t *Command) RunCommand(path string, name string, arg ...string) {
-	prout, pwout := io.Pipe()
-	prerr, pwerr := io.Pipe()
-
 	cmd := exec.Command(name, arg...)
 	fmt.Println("command:", name, arg)
 	if path != "" {
 		cmd.Dir = path
 	}
-	cmd.Stdout = pwout
-	cmd.Stderr = pwerr
 
-	tout := io.TeeReader(prout, os.Stdout)
-	terr := io.TeeReader(prerr, os.Stderr)
+	var bout, berr bytes.Buffer
+	cmd.Stdout = &bout
+	cmd.Stderr = &berr
+
+	// Komutun stdin'e yazılması
+	if t.stdInData != "" {
+		in, err := cmd.StdinPipe()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		go func() {
+			defer in.Close()
+			in.Write([]byte(t.stdInData))
+		}()
+	}
 
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
 
-	var bout, berr bytes.Buffer
-
 	go func() {
-		if _, err := io.Copy(&bout, tout); err != nil {
-			log.Fatal(err)
-		}
-	}()
+		for {
+			// Çıktıları yakalayın ve bir işleve gönderin
+			output := bout.Bytes()
+			if t.stdOutWriter != nil {
+				t.stdOutWriter(output)
+			}
 
-	go func() {
-		if _, err := io.Copy(&berr, terr); err != nil {
-			log.Fatal(err)
+			// Çıktıları sıfırlamayın, bu şekilde sürekli olarak çıktıları izleyebilirsiniz
+
+			// Belirli bir aralıkta veya her çıktı sonrasında bir süre bekleme ekleyebilirsiniz
+			// time.Sleep(1 * time.Second)
 		}
 	}()
 
 	if err := cmd.Wait(); err != nil {
 		log.Println(err)
 	}
-
-	fmt.Printf("buffered out %s\n", bout.String())
-	fmt.Printf("buffered err %s\n", berr.String())
 }
+
 func (t *Command) RunWithPipe(name string, args ...string) {
 	cmd := exec.Command(name, args...)
 	cmd.Stdin = os.Stdin
