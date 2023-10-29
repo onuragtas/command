@@ -43,10 +43,6 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		}()
 	}
 
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
-	}
-
 	go func() {
 		for {
 			// Çıktıları yakalayın ve bir işleve gönderin
@@ -59,6 +55,10 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 			}
 		}
 	}()
+
+	if err := cmd.Start(); err != nil {
+		log.Fatal(err)
+	}
 
 	if err := cmd.Wait(); err != nil {
 		log.Println(err)
