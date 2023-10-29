@@ -16,9 +16,9 @@ func Test(t *testing.T) {
 
 	// Command yapısını oluşturun
 	cmd := Command{
-		stdOutWriter: writeToStdout,
-		stdErrWriter: writeToStderr,
-		stdInData:    "Bu komuta giriş verisi gönderilecek.",
+		StdOutWriter: writeToStdout,
+		StdErrWriter: writeToStderr,
+		StdInData:    "Bu komuta giriş verisi gönderilecek.",
 	}
 
 	cmd.RunCommand("./", "watch", "-n", "2", "ls -la")
