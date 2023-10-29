@@ -43,15 +43,22 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		}()
 	}
 
+	c := make(chan bool)
+
 	go func() {
 		for {
-			// Çıktıları yakalayın ve bir işleve gönderin
-			output := bout.Bytes()
-			if t.StdOutWriter != nil {
-				t.StdOutWriter(output)
-			}
-			if t.Sleep > 0 {
-				time.Sleep(t.Sleep * time.Millisecond)
+			select {
+			case <-c:
+				break
+			default:
+				// Çıktıları yakalayın ve bir işleve gönderin
+				output := bout.Bytes()
+				if t.StdOutWriter != nil {
+					t.StdOutWriter(output)
+				}
+				if t.Sleep > 0 {
+					time.Sleep(t.Sleep * time.Millisecond)
+				}
 			}
 		}
 	}()
@@ -61,6 +68,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 	}
 
 	if err := cmd.Wait(); err != nil {
+		c <- true
 		log.Println(err)
 	}
 }
