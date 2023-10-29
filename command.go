@@ -57,17 +57,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 				break
 			default:
 				// Çıktıları yakalayın ve bir işleve gönderin
-				output := bout.Bytes()
-				if t.StdOutWriter != nil && len(output) > 0 {
-					t.StdOutWriter(output)
-					if t.OutputAndQuit {
-						loop = false
-						break
-					}
-				}
-				if t.Sleep > 0 {
-					time.Sleep(t.Sleep * time.Millisecond)
-				}
+				loop = t.send(bout, t.StdOutWriter)
 			}
 		}
 	}()
@@ -81,17 +71,7 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 				break
 			default:
 				// Çıktıları yakalayın ve bir işleve gönderin
-				output := berr.Bytes()
-				if t.StdErrWriter != nil && len(output) > 0 {
-					t.StdErrWriter(output)
-					if t.OutputAndQuit {
-						loop = false
-						break
-					}
-				}
-				if t.Sleep > 0 {
-					time.Sleep(t.Sleep * time.Millisecond)
-				}
+				loop = t.send(berr, t.StdErrWriter)
 			}
 		}
 	}()
@@ -100,4 +80,23 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		c <- true
 		cError <- true
 	}
+
+	t.send(bout, t.StdOutWriter)
+	t.send(berr, t.StdErrWriter)
+}
+
+func (t *Command) send(buf bytes.Buffer, writer func([]byte)) bool {
+	loop := true
+	output := buf.Bytes()
+	if writer != nil && len(output) > 0 {
+		writer(output)
+		if t.OutputAndQuit {
+			loop = false
+		}
+	}
+	if t.Sleep > 0 {
+		time.Sleep(t.Sleep * time.Millisecond)
+	}
+
+	return loop
 }
