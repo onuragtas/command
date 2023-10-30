@@ -81,6 +81,9 @@ func (t *Command) RunCommand(path string, name string, arg ...string) {
 		cError <- true
 	}
 
+	c <- true
+	cError <- true
+
 	t.send(bout, t.StdOutWriter)
 	t.send(berr, t.StdErrWriter)
 }
