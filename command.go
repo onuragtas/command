@@ -16,6 +16,10 @@ type Command struct {
 	OutputAndQuit bool
 }
 
+func (c *Command) Run(cmd string) ([]byte, error) {
+	return exec.Command("bash", cmd).Output()
+}
+
 func (t *Command) RunCommand(path string, name string, arg ...string) {
 	cmd := exec.Command(name, arg...)
 	fmt.Println("command:", name, arg)
