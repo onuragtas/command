@@ -19,6 +19,10 @@ func (c *Command) Run(cmd string) ([]byte, error) {
 	return exec.Command("bash", cmd).Output()
 }
 
+func (c *Command) RunWithoutBash(cmd string) ([]byte, error) {
+	return exec.Command(cmd).Output()
+}
+
 func (t *Command) RunCommand(path string, name string, arg ...string) {
 	prout, pwout := io.Pipe()
 	prerr, pwerr := io.Pipe()
