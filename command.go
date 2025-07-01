@@ -1,10 +1,8 @@
 package command
 
 import (
-	"bytes"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"time"
@@ -13,6 +11,9 @@ import (
 type Command struct {
 	stdInFunction func()
 	stdInDuration int
+	stdin         io.Reader
+	stdout        io.Writer
+	stderr        io.Writer
 }
 
 func (c *Command) Run(cmd string) ([]byte, error) {
@@ -23,45 +24,47 @@ func (c *Command) RunWithoutBash(cmd string) ([]byte, error) {
 	return exec.Command(cmd).Output()
 }
 
-func (t *Command) RunCommand(path string, name string, arg ...string) {
-	prout, pwout := io.Pipe()
-	prerr, pwerr := io.Pipe()
-
+// RunCommand runs a command with custom stdin, stdout, stderr. If any is nil, uses os.Stdin, os.Stdout, os.Stderr respectively.
+func (t *Command) RunCommand(path string, name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
-	fmt.Println("command:", name, arg)
 	if path != "" {
 		cmd.Dir = path
 	}
-	cmd.Stdout = pwout
-	cmd.Stderr = pwerr
-
-	tout := io.TeeReader(prout, os.Stdout)
-	terr := io.TeeReader(prerr, os.Stderr)
-
-	if err := cmd.Start(); err != nil {
-		log.Fatal(err)
+	// stdin
+	if t.stdin != nil {
+		cmd.Stdin = t.stdin
+	} else {
+		cmd.Stdin = os.Stdin
 	}
-
-	var bout, berr bytes.Buffer
-
-	go func() {
-		if _, err := io.Copy(&bout, tout); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	go func() {
-		if _, err := io.Copy(&berr, terr); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	if err := cmd.Wait(); err != nil {
-		log.Println(err)
+	// stdout
+	if t.stdout != nil {
+		cmd.Stdout = t.stdout
+	} else {
+		cmd.Stdout = os.Stdout
 	}
+	// stderr
+	if t.stderr != nil {
+		cmd.Stderr = t.stderr
+	} else {
+		cmd.Stderr = os.Stderr
+	}
+	return cmd.Run()
+}
 
-	fmt.Printf("buffered out %s\n", bout.String())
-	fmt.Printf("buffered err %s\n", berr.String())
+// RunCommandStd eski davranış için: sadece path, name, arg alır ve çıktıyı ekrana basar
+// stdin setter
+func (t *Command) SetStdin(r io.Reader) {
+	t.stdin = r
+}
+
+// stdout setter
+func (t *Command) SetStdout(w io.Writer) {
+	t.stdout = w
+}
+
+// stderr setter
+func (t *Command) SetStderr(w io.Writer) {
+	t.stderr = w
 }
 func (t *Command) RunWithPipe(name string, args ...string) {
 	cmd := exec.Command(name, args...)
